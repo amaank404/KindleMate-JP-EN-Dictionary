@@ -1,5 +1,8 @@
 # Data files downloaded
 data/
+japanese-kindle-mate.txt
+# Temprorary workspace
+conversion.ipynb
 
 # VSCode
 .vscode/
