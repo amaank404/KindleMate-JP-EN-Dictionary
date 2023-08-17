@@ -8,7 +8,7 @@ import requests
 
 def cvtjmdictprocessed_to_kindlemateanki(data: dict) -> bytes:
     # Converting it to Kindle Mate format
-    mainfmt = "{word}\t{define}"
+    mainfmt = "{word}\t{define}\r\n"
     outdict = []
 
     i2 = 0
@@ -19,6 +19,7 @@ def cvtjmdictprocessed_to_kindlemateanki(data: dict) -> bytes:
             print('-- Processed Words: ', i2)
         
         i2 += 1
+
         # Readings
         defination = "<div class=readingscont>"
         defination += "・".join([f"<span class=reading>{x}</span>" for x in item["reading"]])
@@ -81,7 +82,7 @@ def cvtjmdictprocessed_to_kindlemateanki(data: dict) -> bytes:
             defination += "</div></li>"
         
         defination += "</ol>"
-        outdict.append(mainfmt.format(word=k, define=defination) + "\n")
+        outdict.append(mainfmt.format(word=k, define=defination))
     return ''.join(outdict).encode('utf-8')
 
 def processjmdict(jmdict_data: dict) -> dict:
@@ -194,60 +195,64 @@ def processjmdict(jmdict_data: dict) -> dict:
             outprep[kana["text"]] = entry
     return outprep
 
+def downloadresources():
+    resp = requests.get("https://api.github.com/repos/scriptin/jmdict-simplified/releases/latest")
+
+    downloadsurl = {}
+    for x in resp.json()["assets"]:
+        if (fnmatch.fnmatch(x["name"], "jmdict-eng-?.*.json.zip") or 
+            fnmatch.fnmatch(x["name"], "jmnedict-all-?.*.json.zip")):
+
+            print(f"Queing download for asset: `{x['name']}`")
+            if x["name"].startswith("jmdict"):
+                downloadsurl["jmdict"] = x["browser_download_url"]
+            else:
+                downloadsurl["jmnedict"] = x["browser_download_url"]
+
+    print()
+    for k, v in downloadsurl.items():
+        print(f"Downloading {k} from {v}")
+        data = requests.get(v).content
+        print(f"Writing to disk")
+        os.makedirs("data/", exist_ok=True)
+        with open(f"data/{k}.zip", 'wb') as fp:
+            fp.write(data)
+        print(f"Extracting data")
+        file = zipfile.ZipFile(f"data/{k}.zip", 'r')
+        for x in file.namelist():
+            if x.endswith(".json"):
+                print("- Found json file within zip, reading it")
+                data2 = file.read(x)
+                print("- Writing to json file")
+                with open(f"data/{k}.json", "wb") as fp:
+                    fp.write(data2)
+                print("- Extraction Complete, Discarding ZIP File")
+                break
+        file.close()
+        os.remove(f"data/{k}.zip")
+        print(f"- Asset Download Complete: `{k}`")
+
+def jmdictRunner():
+    print("Processing JMDict - Phase 1")
+    print("- Reading and parsing JSON file")
+    with open("data/jmdict.json", "rb") as fp:
+        jmdict_data = json.loads(fp.read().decode("utf-8"))
+    print("- Processing")
+    processed_jmdict = processjmdict(jmdict_data)
+    print("Processing JMDict - Phase 2")
+    print("- Converting JSON Definations to Anki Readable HTML")
+    finaldict = cvtjmdictprocessed_to_kindlemateanki(processed_jmdict)
+    print("- Writing to `japanese-kindle-mate.txt`")
+    with open("japanese-kindle-mate.txt", "wb") as fp:
+        fp.write(finaldict)
+    print("- Copying japanese kindle mate file to local installation's dictionaries")
+    os.makedirs(os.path.expanduser("~")+"/Documents/Kindle Mate/dicts/", exist_ok=True)
+    shutil.copyfile("japanese-kindle-mate.txt", os.path.expanduser("~")+"/Documents/Kindle Mate/dicts/japanese-kindle-mate.txt")
+    print("Successfully Processed JMDict")
+
 print("Downloading the latest edition from scriptin/jmdict-simplified")
-
-resp = requests.get("https://api.github.com/repos/scriptin/jmdict-simplified/releases/latest")
-
-downloadsurl = {}
-for x in resp.json()["assets"]:
-    if (fnmatch.fnmatch(x["name"], "jmdict-eng-?.*.json.zip") or 
-        fnmatch.fnmatch(x["name"], "jmnedict-all-?.*.json.zip")):
-
-        print(f"Queing download for asset: `{x['name']}`")
-        if x["name"].startswith("jmdict"):
-            downloadsurl["jmdict"] = x["browser_download_url"]
-        else:
-            downloadsurl["jmnedict"] = x["browser_download_url"]
-
-print()
-for k, v in downloadsurl.items():
-    print(f"Downloading {k} from {v}")
-    data = requests.get(v).content
-    print(f"Writing to disk")
-    os.makedirs("data/", exist_ok=True)
-    with open(f"data/{k}.zip", 'wb') as fp:
-        fp.write(data)
-    print(f"Extracting data")
-    file = zipfile.ZipFile(f"data/{k}.zip", 'r')
-    for x in file.namelist():
-        if x.endswith(".json"):
-            print("- Found json file within zip, reading it")
-            data2 = file.read(x)
-            print("- Writing to json file")
-            with open(f"data/{k}.json", "wb") as fp:
-                fp.write(data2)
-            print("- Extraction Complete, Discarding ZIP File")
-            break
-    file.close()
-    os.remove(f"data/{k}.zip")
-    print(f"- Asset Download Complete: `{k}`")
+downloadresources()
 
 print()
 print("Starting Processing Phase")
-print("Processing JMDict - Phase 1")
-print("- Reading and parsing JSON file")
-with open("data/jmdict.json", "rb") as fp:
-    jmdict_data = json.loads(fp.read().decode("utf-8"))
-print("- Processing")
-processed_jmdict = processjmdict(jmdict_data)
-print("Processing JMDict - Phase 2")
-print("- Converting JSON Definations to Anki Readable HTML")
-finaldict = cvtjmdictprocessed_to_kindlemateanki(processed_jmdict)
-print("- Writing to `japanese-kindle-mate.txt`")
-with open("japanese-kindle-mate.txt", "wb") as fp:
-    fp.write(finaldict)
-print("- Copying japanese kindle mate file to local installation's dictionaries")
-os.makedirs(os.path.expanduser("~")+"/Documents/Kindle Mate/dicts/", exist_ok=True)
-shutil.copyfile("japanese-kindle-mate.txt", os.path.expanduser("~")+"/Documents/Kindle Mate/dicts/japanese-kindle-mate.txt")
-print("Successfully Processed JMDict")
-
+jmdictRunner()
