@@ -88,6 +88,9 @@ To begin, launch Anki on your desktop and do as follows
 
 .definerelated, .defineantonym {
 	margin-top: 1em;
+	display: flex;
+	align-items: center;
+	gap: 0.3em;
 }
 
 .defineknji {

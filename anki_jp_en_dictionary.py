@@ -6,7 +6,7 @@ import os
 import shutil
 import requests
 
-def cvtjmdictprocessed_to_kindlemateanki(data: dict) -> bytes:
+def cvtjmdictprocessed_to_anki(data: dict) -> bytes:
     # Converting it to Kindle Mate format
     mainfmt = "{word}\t{define}\r\n"
     outdict = []
@@ -28,9 +28,7 @@ def cvtjmdictprocessed_to_kindlemateanki(data: dict) -> bytes:
         # Tags
         defination += f"<div class=tags>{'・'.join(item['tags'])}</div>"
 
-        # Definations
-        defination += "<div class=definelabel>Definations</div><ol>"
-
+        defination += "<ol>"
         for x in item["definations"]:
             defination += "<li><div class=definecont>"
 
@@ -241,13 +239,12 @@ def jmdictRunner():
     processed_jmdict = processjmdict(jmdict_data)
     print("Processing JMDict - Phase 2")
     print("- Converting JSON Definations to Anki Readable HTML")
-    finaldict = cvtjmdictprocessed_to_kindlemateanki(processed_jmdict)
-    print("- Writing to `japanese-kindle-mate.txt`")
-    with open("japanese-kindle-mate.txt", "wb") as fp:
+    finaldict = cvtjmdictprocessed_to_anki(processed_jmdict)
+    print("- Writing to `japanese-dict.txt`")
+    with open("japanese-dict.txt", "wb") as fp:
         fp.write(finaldict)
-    print("- Copying japanese kindle mate file to local installation's dictionaries")
-    os.makedirs(os.path.expanduser("~")+"/Documents/Kindle Mate/dicts/", exist_ok=True)
-    shutil.copyfile("japanese-kindle-mate.txt", os.path.expanduser("~")+"/Documents/Kindle Mate/dicts/japanese-kindle-mate.txt")
+    if os.path.exists(os.path.expanduser("~")+"/Documents/Kindle Mate/dicts"):
+        shutil.copyfile("japanese-dict.txt", os.path.expanduser("~")+"/Documents/Kindle Mate/dicts/japanese-dict.txt")
     print("Successfully Processed JMDict")
 
 print("Downloading the latest edition from scriptin/jmdict-simplified")

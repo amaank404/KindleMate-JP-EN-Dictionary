@@ -7,7 +7,7 @@ A KindleMateAnki dictionary for japanese and english both.
 
 ## User Guide / Tutorial
 
-First head over to [releases](https://github.com/amaank404/KindleMateAnki-JP-EN-Dictionary/releases/latest) and from there download the latest `japanese-kindle-mate.txt`.
+First head over to [releases](https://github.com/amaank404/KindleMateAnki-JP-EN-Dictionary/releases/latest) and from there download the latest `japanese-dict.txt`. From there, copy the downloaded dictionary file to `C:\Users\USERNAME\Documents\Kindle Mate\dicts` (Change USERNAME to your username)
 
 Then do the following steps as described
 
@@ -54,3 +54,8 @@ Then do the following steps as described
 
 11. Now, you have got all you kindle words into anki with proper defination etc. Happy Learning!
 
+## Generating the dictionary yourself
+
+1. Install Python
+2. Install requirements `pip install -r requirements.txt`
+3. Run `python anki_jp_en_dictionary.py`
