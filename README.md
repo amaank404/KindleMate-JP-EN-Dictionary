@@ -3,7 +3,8 @@ A KindleMateAnki dictionary for japanese and english both.
 
 ## Screenshots of Cards
 
-
+![](scrshots/sk1.png)
+![](scrshots/sk2.png)
 
 ## User Guide / Tutorial
 
